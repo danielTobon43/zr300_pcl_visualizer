@@ -36,7 +36,7 @@ Follow the instructions on: https://github.com/IntelRealSense/librealsense/tree/
       
    ## Test
    Set "your own" PCL build directory in CMakeList.txt e.g: /opt/pcl-1.9.0/build and save it.
-   Create a "build" folder,</br>
+   Create a "build" folder,<br/>
    
       - Connect camera ZR300 to USB 3.0 port
       - cd /build
