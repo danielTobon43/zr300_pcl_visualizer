@@ -6,8 +6,21 @@
 #include <pcl/point_types.h>
 #include <pcl/console/print.h>
 #include <pcl/visualization/pcl_visualizer.h>
+
+//---
+#include <pcl/surface/bilateral_upsampling.h>
+#include <pcl/surface/mls.h>
+
+#include <pcl/kdtree/kdtree_flann.h>
+#include <pcl/kdtree/kdtree.h>
+
+#include <pcl/search/search.h>
+
+
+#include <iostream>
+#include <fstream>
 #include <string>
-#include <stdio.h>
+//---
 
 // Window size and frame rate
 int const INPUT_WIDTH      = 320;
@@ -116,18 +129,18 @@ int main(int argc, char * argv[]) {
 	 viewer->setPosition(0,0);
 	 viewer->setBackgroundColor(0.0, 0.0, 0.0, 0.0); // Setting background to a dark grey
 
-	 viewer->setShowFPS(true);
+	 // viewer->addCoordinateSystem(0.5);
+	 viewer->setShowFPS(false);
+	 // pcl::PointXYZ p1, p2, p3;
 
-	 viewer->addCoordinateSystem(0.5);
-	 pcl::PointXYZ p1, p2, p3;
+	 // p1.getArray3fMap() << 0.5, 0, 0;
+	 // p2.getArray3fMap() << 0, 0.5, 0;
+	 // p3.getArray3fMap() << 0,0.1,0.5;
 
-	 p1.getArray3fMap() << 0.5, 0, 0;
-	 p2.getArray3fMap() << 0, 0.5, 0;
-	 p3.getArray3fMap() << 0,0.1,0.5;
-
-	 viewer->addText3D("x", p1, 0.1, 1, 0, 0, "x_");
-	 viewer->addText3D("y", p2, 0.1, 0, 1, 0, "y_");
-	 viewer->addText3D ("z", p3, 0.1, 0, 0, 1, "z_");
+	 // viewer->addText3D("x", p1, 0.1, 1, 0, 0, "x_");
+	 // viewer->addText3D("y", p2, 0.1, 0, 1, 0, "y_");
+	 // viewer->addText3D ("z", p3, 0.1, 0, 0, 1, "z_");
+	 viewer->resetCamera();
 
 	 int xpos = 1.0;
 	 int ypos = 1.0;
@@ -136,6 +149,35 @@ int main(int argc, char * argv[]) {
 	 double r = 1.0;
 	 double g = 1.0;
 	 double b = 1.0;
+
+	 double clip0 = 0.106177;
+	 double clip1 = 106.177;
+
+	 double pos0 = -0.562581;
+	 double pos1 = -0.0597481;
+	 double pos2 = 3.33506;
+
+	 double view0 = 0;
+	 double view1 = -1;
+	 double view2 = 0;
+
+	 double focal0 = 0;
+	 double focal1 = 0;
+	 double focal2 = -2.02641;
+
+	 double posx = 65;
+	 double posy = 24;
+
+	 double sizex = 1215;
+	 double sizey = 1000;
+
+	 viewer->setCameraPosition(focal0,focal1,focal2,pos0,pos1,pos2,view0,view1,view2);
+     //viewer->setCameraFieldOfView(30);
+     viewer->setCameraClipDistances(clip0, clip1);
+     viewer->setPosition(posx, posy);
+     viewer->setSize(sizex, sizey);
+
+     //viewer->initCameraParameters();
   
 	 pcl::console::print_info ("\npress [q] to exit!\n");
 	 int cont = 0;
@@ -147,27 +189,72 @@ int main(int argc, char * argv[]) {
          if(_rs_camera.is_streaming( )){
              _rs_camera.wait_for_frames( );
 
-             pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud = points_to_pcl(_rs_camera);
+             pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_cloud = points_to_pcl(_rs_camera);
              if(cont<=0){
 
              	 std::string str = "Points: ";
 				 std::stringstream ss;
-				 ss << cloud->points.size();
+				 ss << input_cloud->points.size();
 				 str += ss.str();
 
-             	 viewer->addPointCloud(cloud,"POINTCLOUD");
-             	 viewer->initCameraParameters();
-	             viewer->resetCamera();
+             	 viewer->addPointCloud(input_cloud,"POINTCLOUD");
+             	 //viewer->initCameraParameters();
+	             //viewer->resetCamera();
 	             viewer->addText(str, xpos, ypos, fontSize,r,g,b,"text1");
              	 cont += 1;
 
-             }else{
-             	std::string str = "Points: ";
+             }else{             	
+
+             	pcl::PointCloud<pcl::PointXYZRGB>::Ptr output_cloud (new pcl::PointCloud<pcl::PointXYZRGB> ());
+             	/*
+				pcl::PointCloud<pcl::PointXYZRGB>::Ptr dense_points (new pcl::PointCloud<pcl::PointXYZRGB> ());
+
+			    pcl::search::KdTree<pcl::PointXYZRGB>::Ptr kd_tree (new pcl::search::KdTree<pcl::PointXYZRGB>);
+			    pcl::PointCloud<pcl::PointNormal>::Ptr mls_points (new pcl::PointCloud<pcl::PointNormal>());
+			    pcl::MovingLeastSquares<pcl::PointXYZRGB, pcl::PointXYZRGB> mls;
+
+			    double search_radius = 0.03; //0.03
+			    double sampling_radius = 0.005; //0.005
+			    double step_size = 0.005; //0.005
+			    double gauss_param = (double)std::pow(search_radius,2);
+			    int pol_order = 2;
+			    unsigned int num_threats = 1;
+
+			    mls.setComputeNormals(true);
+			    mls.setInputCloud(input_cloud);
+			    mls.setSearchMethod(kd_tree);
+			    mls.setSearchRadius(search_radius);
+			    mls.setUpsamplingMethod(pcl::MovingLeastSquares<pcl::PointXYZRGB, pcl::PointXYZRGB>::UpsamplingMethod::SAMPLE_LOCAL_PLANE);
+			    mls.setUpsamplingRadius(sampling_radius);
+			    mls.setUpsamplingStepSize(step_size);
+			    mls.setPolynomialOrder(pol_order);
+			    mls.setSqrGaussParam(gauss_param);// (the square of the search radius works best in general)
+			    mls.setCacheMLSResults(true);//Set whether the mls results should be stored for each point in the input cloud.
+			    mls.setNumberOfThreads(num_threats);
+			    //mls.setDilationVoxelSize();//Used only in the VOXEL_GRID_DILATION upsampling method 
+			    //mls.setPointDensity(15); //15
+			    mls.process(*dense_points);
+			    */
+
+			    *output_cloud = *input_cloud;
+
+			    /*
+			    *output_cloud += *dense_points;
+
+			    pcl::console::print_info("\nNew points: ");
+			    pcl::console::print_value("%d", dense_points->points.size());
+
+			    pcl::console::print_info("\nOutput cloud points: ");
+			    pcl::console::print_value("%d", output_cloud->points.size());
+			    pcl::console::print_info("\n");
+			    */
+
+             	 std::string str = "Points: ";
 				 std::stringstream ss;
-				 ss << cloud->points.size();
+				 ss << output_cloud->points.size();
 				 str += ss.str();
 
-				 viewer->updatePointCloud(cloud,"POINTCLOUD");
+				 viewer->updatePointCloud(output_cloud,"POINTCLOUD");
 	             viewer->updateText(str, xpos, ypos, fontSize,r,g,b,"text1");
 
              }
