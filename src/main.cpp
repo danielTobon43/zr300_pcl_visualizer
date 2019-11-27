@@ -547,11 +547,11 @@ int main(int argc, char *argv[]) {
 
             int input_COM1 = 0; // ZR300 camera 1
             int input_COM2 = 1; // ZR300 camera 2
-            // rs::device &_rs_camera1 = init_realsense_camera(rs_ctx, input_COM1);
-            // rs::device &_rs_camera2 = init_realsense_camera(rs_ctx, input_COM2);
+            rs::device &_rs_camera1 = init_realsense_camera(rs_ctx, input_COM1);
+            rs::device &_rs_camera2 = init_realsense_camera(rs_ctx, input_COM2);
 
-            rs::device &_rs_camera1 = init_realsense_camera(rs_ctx, input_COM2);
-            rs::device &_rs_camera2 = init_realsense_camera(rs_ctx, input_COM1);
+            // rs::device &_rs_camera1 = init_realsense_camera(rs_ctx, input_COM2);
+            // rs::device &_rs_camera2 = init_realsense_camera(rs_ctx, input_COM1);
 
             std::cout << "-> -------------------------------" << std::endl;
             std::cout << "-> Setting visualizer" << std::endl;
@@ -711,12 +711,12 @@ int main(int argc, char *argv[]) {
                     sac_ia.setMaxCorrespondenceDistance(0.01f * 0.01f);
                     sac_ia.setMaximumIterations(500);
 
-                    pcl::PointCloud<pcl::PointXYZI>::Ptr registration_output(new pcl::PointCloud<pcl::PointXYZI>());
+                    pcl::PointCloud<pcl::PointXYZI>::Ptr sac_registration(new pcl::PointCloud<pcl::PointXYZI>());
                     sac_ia.setInputCloud(camera2_keypoints);
                     sac_ia.setInputTarget(camera1_keypoints);
                     sac_ia.setSourceFeatures(camera2_descriptors);
                     sac_ia.setTargetFeatures(camera1_descriptors);
-                    // sac_ia.align(*registration_output);
+                    // sac_ia.align(*sac_registration);
 
                     pcl::PointCloud<pcl::PointXYZRGB>::Ptr camera2alignetocamera1(new pcl::PointCloud<pcl::PointXYZRGB>());
                     // pcl::copyPointCloud(*registration_output, *camera2alignetocamera1);
@@ -724,7 +724,7 @@ int main(int argc, char *argv[]) {
                     // ----------------------------------------------
                     // Transformation matrix camera 1 and 2 (ICP RefineAlignment)
                     // ----------------------------------------------
-
+                    pcl::PointCloud<pcl::PointXYZRGB>::Ptr icp_registration(new pcl::PointCloud<pcl::PointXYZRGB>());
                     pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> icp;
 
                     // icp.setInputCloud(points_camera2_backup);
@@ -733,12 +733,12 @@ int main(int argc, char *argv[]) {
                     icp.setInputCloud(points_camera1_backup);
                     icp.setInputTarget(points_camera2_backup);
 
-                    icp.setMaxCorrespondenceDistance(0.01);
-                    icp.setMaximumIterations(100);
-                    icp.setTransformationEpsilon(1e-2);
-                    icp.setEuclideanFitnessEpsilon(1e-5);
+                    icp.setMaxCorrespondenceDistance(300);
+                    icp.setMaximumIterations(10000);
+                    icp.setTransformationEpsilon(0.0000001);
+                    icp.setEuclideanFitnessEpsilon(0.000000000001);
 
-                    // icp.align(*registration_output);
+                    // icp.align(*icp_registration);
 
                     Eigen::Matrix4f transformation_matrix;
                     Eigen::Matrix4f transformation_matrix_sac = sac_ia.getFinalTransformation();
@@ -748,12 +748,27 @@ int main(int argc, char *argv[]) {
                     transformation_matrix = transformation_matrix_sac * scale;
                     transformation_matrix = transformation_matrix_icp * transformation_matrix;
                     transformation_matrix = scale_i * transformation_matrix;
+
                     // std::cout << " ---------------------------------" << std::endl;
                     // std::cout << " **** Transformation matrix ***** " << std::endl;
                     // std::cout << " ---------------------------------" << std::endl;
                     // std::cout << "-> matrix:\n" << transformation_matrix << std::endl;
 
-                    pcl::transformPointCloud(*points_camera1_backup, *camera2alignetocamera1, transformation_matrix);
+                    pcl::PointCloud<pcl::PointXYZRGB>::Ptr transformed_target_cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
+                    pcl::transformPointCloud(*points_camera1_backup, *transformed_target_cloud, transformation_matrix);
+
+                    pcl::PointCloud<pcl::PointXYZRGB>::Ptr transformed_input_cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
+                    Eigen::Isometry3f pose(Eigen::Isometry3f(Eigen::Translation3f(transformed_target_cloud->sensor_origin_[0], transformed_target_cloud->sensor_origin_[1], transformed_target_cloud->sensor_origin_[2])) *
+                                           Eigen::Isometry3f(transformed_target_cloud->sensor_orientation_));
+                    Eigen::Matrix4f transformation_matrix2 = pose.matrix();
+                    pcl::transformPointCloud(*points_camera2_backup, *transformed_input_cloud, transformation_matrix2);
+
+                    // now both point clouds are transformed to the origin and can be added up
+                    pcl::PointCloud<pcl::PointXYZRGB>::Ptr output_cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
+                    *output_cloud = *transformed_input_cloud;
+                    *output_cloud += *transformed_target_cloud;
+
+                    // pcl::transformPointCloud(*points_camera1_backup, *camera2alignetocamera1, transformation_matrix);
 
                     if (cont <= 0) {
 
@@ -790,7 +805,7 @@ int main(int argc, char *argv[]) {
                         // pcl::transformPointCloud(*points_camera1,*temp1,tform);
                         *points_camera_fusion += *camera2alignetocamera1;
 
-                        viewer->addPointCloud(points_camera_fusion, "cloud_fusion", PORT3);
+                        viewer->addPointCloud(output_cloud, "cloud_fusion", PORT3);
                         // viewer->addPointCloud(points_camera2,"cloud2_source",PORT3);
                         // viewer->addText(str, xpos, ypos, fontSize,r,g,b,"text2",PORT2);
                         viewer->addText("camera fusion", xpos, ypos, fontSize, r, g, b, "text3", PORT3);
@@ -840,7 +855,7 @@ int main(int argc, char *argv[]) {
                         // pcl::transformPointCloud(*points_camera1,*temp2,tform);
                         *points_camera_fusion += *camera2alignetocamera1;
 
-                        viewer->updatePointCloud(points_camera_fusion, "cloud_fusion");
+                        viewer->updatePointCloud(output_cloud, "cloud_fusion");
 
                         viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "cloud_fusion");
                         // iewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,
@@ -889,5 +904,8 @@ int main(int argc, char *argv[]) {
             _rs_camera2.stop();
         }
         return EXIT_SUCCESS;
+
+        // http://www.pcl-users.org/Different-results-by-using-icp-align-and-getfinaltransformation-td4021967.html
+        // https://stackoverflow.com/questions/38075807/point-cloud-icp-alignment
     }
 }
