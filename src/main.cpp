@@ -694,8 +694,6 @@ int main(int argc, char *argv[]) {
     int PORT3 = 0;
     viewer->createViewPort(0.0, 0.0, 1.0, 0.5, PORT3);
 
-    int iterations = 10; // Default number of ICP iterations
-
     std::cout << "-> Removing all pointclouds" << std::endl;
     viewer->removeAllPointClouds(PORT1);
     viewer->removeAllPointClouds(PORT2);
@@ -705,7 +703,6 @@ int main(int argc, char *argv[]) {
     // ----------------------------------------------
     // Loop for streaming
     // ----------------------------------------------
-    unsigned int cont = 0;
 
     while (!viewer->wasStopped()) {
 
@@ -875,9 +872,11 @@ int main(int argc, char *argv[]) {
         Eigen::Matrix4f transformation_matrix_icp = icp.getFinalTransformation();
 
         // transformation_matrix = transformation_matrix_sac;
-        transformation_matrix = transformation_matrix_sac * scale;
-        transformation_matrix = transformation_matrix_icp * transformation_matrix;
-        transformation_matrix = scale_i * transformation_matrix;
+        // transformation_matrix = transformation_matrix_sac * scale;
+        // transformation_matrix = transformation_matrix_icp * transformation_matrix;
+        // transformation_matrix = scale_i * transformation_matrix;
+
+        transformation_matrix = transformation_matrix_icp * transformation_matrix_sac;
 
         // std::cout << " ---------------------------------" <<     std::endl;
         // std::cout << " **** Transformation matrix ***** " <<   std::endl;
@@ -896,7 +895,8 @@ int main(int argc, char *argv[]) {
                                                    transformed_target_cloud->sensor_origin_[1],
                                                    transformed_target_cloud->sensor_origin_[2])) *
             Eigen::Isometry3f(transformed_target_cloud->sensor_orientation_));
-        Eigen::Matrix4f transformation_matrix2 = pose.matrix();
+        // Eigen::Matrix4f transformation_matrix2 = pose.matrix();
+        Eigen::Matrix4f transformation_matrix2 = Eigen::Matrix4f::Identity();
         pcl::transformPointCloud(*points_camera2_backup, *transformed_input_cloud,
                                  transformation_matrix2);
 
@@ -951,16 +951,14 @@ int main(int argc, char *argv[]) {
           *points_camera_fusion += *camera2alignetocamera1;
 
           viewer->addPointCloud(output_cloud, "cloud_fusion", PORT3);
-          //
-          viewer->addPointCloud(points_camera2, "cloud2_source", PORT3);
+          // viewer->addPointCloud(points_camera2, "cloud2_source", PORT3);
           // viewer->addText(str, xpos, ypos,   fontSize,r,g,b,"text2",PORT2);
           viewer->addText("camera fusion", xpos, ypos, fontSize, r, g, b, "text3", PORT3);
 
           viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5,
                                                    "cloud_fusion");
-          //
-          viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5,
-                                                   "cloud2_source");
+          // viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,
+          // 5,"cloud2_source");
 
           cont += 1;
 
@@ -992,10 +990,8 @@ int main(int argc, char *argv[]) {
           pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZRGB> color_handler2(
               points_camera2, 0, 255, 0);
 
-          //
-          viewer->updatePointCloud(points_camera1, color_handler1, "cloud1_target");
-          //
-          viewer->updatePointCloud(points_camera2, color_handler2, "cloud2_source");
+          //  viewer->updatePointCloud(points_camera1, color_handler1, "cloud1_target");
+          //  viewer->updatePointCloud(points_camera2, color_handler2, "cloud2_source");
 
           // viewer->updatePointCloud(points_camera1,"cloud1_target");
           // viewer->updatePointCloud(points_camera2,"cloud2_source");
@@ -1014,9 +1010,8 @@ int main(int argc, char *argv[]) {
 
           viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5,
                                                    "cloud_fusion");
-          //
-          viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5,
-                                                   "cloud2_source");
+          // viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,
+          // 5,"cloud2_source");
           // viewer->addText(str, xpos, ypos, fontSize, r, g, b, "text2", PORT2);
           // viewer->updateText("camera 3", xpos, ypos,
           // fontSize,r,g,b,"text3",PORT3);

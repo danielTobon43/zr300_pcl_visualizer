@@ -89,17 +89,22 @@ link_directories(${REALSENSE_LIB})
 ##############################################################################
 # SOURCE CODE
 ##############################################################################
-set(MAIN_SOURCE "main.cpp")
+#set(MAIN_SOURCE "main.cpp")
+set(MAIN_SOURCE "main_multple_ports.cpp")
 
 ##############################################################################
 # EXECUTABLES
 ##############################################################################
 add_executable(${PROJECT_NAME} ${MAIN_SOURCE})
+add_executable(regis-test registration_test.cpp)
+add_executable(stitching-test stitching_test.cpp)
 
 ##############################################################################
 # TARGET LIBRARIES
 ##############################################################################
 target_link_libraries(${PROJECT_NAME} ${PCL_LIBRARIES} ${REALSENSE_LIB})
+target_link_libraries(regis-test ${PCL_LIBRARIES})
+target_link_libraries(stitching-test ${PCL_LIBRARIES} )
 target_compile_options(${PROJECT_NAME} PRIVATE -w)
 
 message("=========================================")
