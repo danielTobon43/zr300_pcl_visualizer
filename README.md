@@ -34,12 +34,28 @@ Follow the instructions on: https://github.com/IntelRealSense/librealsense/tree/
       At the root library folder, run:
       - ./scripts/patch-realsense-ubuntu-xenial.sh
       
-   ## Test
-   * Set "your own" PCL build directory in CMakeList.txt e.g: /opt/pcl-1.9.0/build and save it.<br/>
-   * Create a "build" folder,
+   ## How to compile ZR300 pcl visualizer
+   * Download or clone this repo: https://github.com/danielTobon43/zr300_pcl_visualizer.git
+   * Create a "build" folder
+   * Modify the *CMakeList.txt* file with your own path:
+      
+            e.g: 
+            
+            PCL BUILD DIR:          /opt/pcl-1.9.0/build 
+            REALSENSE LIB DIR:      /opt/librealsense-legacy
+            
+            and save it
+            
+   * Run cmake,
+   
+            - cmake ../src/
+            - make
+    
+   ## Test  
+  
      
       - Connect camera ZR300 to USB 3.0 port
-      - cd /build
+      - cd build/
       - ./pcl-realsense
       
    ## Output example   
