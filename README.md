@@ -34,7 +34,7 @@ Follow the instructions on: https://github.com/IntelRealSense/librealsense/tree/
       At the root library folder, run:
       - ./scripts/patch-realsense-ubuntu-xenial.sh
       
-   ## How to compile ZR300 pcl visualizer
+## How to compile ZR300 pcl visualizer
    * Download or clone this repo: https://github.com/danielTobon43/zr300_pcl_visualizer.git
    * Create a "build" folder
    * Modify the *CMakeList.txt* file with your own path:
@@ -51,18 +51,91 @@ Follow the instructions on: https://github.com/IntelRealSense/librealsense/tree/
             - cmake ../src/
             - make
     
-   ## Test  
+## Test  
   
      
       - Connect camera ZR300 to USB 3.0 port
       - cd build/
       - ./pcl-realsense
       
-   ## Output example   
-      There are 1 connected RealSense devices.
+## Output example 
 
-      Using device 0, an Intel RealSense ZR300
+For 1 camera:
+
+      There are 1 connected RealSense devices.
+      -> Using device 0, an Intel RealSense ZR300
           Serial number: 4071801127
           Firmware version: 2.0.71.28
+
+      -> -------------------------------
+      -> Setting visualizer
+      -> Setting loop for streaming
+      ********************************
+      Iteration No.[0] 
+      ********************************
+
+      ********************************
+      Iteration No.[1] 
+      ********************************
+
+      ********************************
+      Iteration No.[2] 
+      ********************************
+      
+For 2 cameras:
+
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      ***      MAIN PROGRAM     ***
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      -> Reading camera ...There are 2 connected RealSense devices.
+      -> Using device 0, an Intel RealSense ZR300
+          Serial number: 4071801092
+          Firmware version: 2.0.71.28
+
+      -> Using device 1, an Intel RealSense ZR300
+          Serial number: 4071801127
+          Firmware version: 2.0.71.28
+
+      -> -------------------------------
+      -> Setting visualizer
+      -> Setting viewport
+      -> Removing all pointclouds
+      -> Setting loop for streaming
+      ********************************
+      Iteration No.[0] 
+      ********************************
+
+       ---------------------------------
+       *******     Camera 1     ******* 
+       ---------------------------------
+      -> Points rgb: 	 		484
+      -> Points xyzi:  		      484
+      -> Normal points: 		484
+      -> Keypoints:			383
+      -> Descriptors:			383
+
+       ---------------------------------
+       *******     Camera 2     ******* 
+       ---------------------------------
+      -> Points rgb: 	 		1018
+      -> Points xyzi:  		      1018
+      -> Normal points: 		1018
+      -> Keypoints:			797
+      -> Descriptors:			797
+      
+            
+For none cameras:
+
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      ***      MAIN PROGRAM     ***
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      > -> Loading
+      No devices detected. Is it plugged in?
+      Min: 1 camera, Max: 2 cameras
+      > Visualizer closed.
+
+
+
+
 
     
