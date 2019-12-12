@@ -1,5 +1,5 @@
 # zr300_pcl_visualizer
-A simple pcl visualizer for the pointcloud of a ZR300 Intel Realsense camera
+A simple C++ program to visualize the 3D pointcloud from a ZR300 Intel Realsense camera using PCL 1.9.0, CMake and IntelRealsense SDK Legacy (ZR300). This program detected if 1 or 2 Intelrealsense cameras are connected to a USB3.0 port and display a viewer. 
 
 pcl - librealsense wrapper: https://joshmcculloch.nz/#!realsense
 
