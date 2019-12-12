@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 
 project(pcl-realsense)
 
-# set build type = Debug mode
+# set build type = Release mode
 set(CMAKE_BUILD_TYPE Release)
 
 message("\n" "=========================================")
@@ -12,15 +12,17 @@ message("=========================================")
 # set the include directive in the same project folder
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-# set corresponding package directories
-set(PCL_DIR /opt/pcl-1.9.0/build)
-set(RS_DIR /opt/librealsense-legacy)
+# set corresponding libraries directories
+set(PCL_DIR /opt/pcl-1.9.0/build)					# PCL build directory
+set(RS_DIR /opt/librealsense-legacy)				# Realsense directory
+set(RS_LIB_DIR ${RS_DIR}/build)						# Realsense build directory
+set(RS_INCLUDE_DIR ${RS_DIR}/include)				# Realsense include directory
 
-# Include dependencies of pcl 1.8.1 in project directorie
+# Include dependencies of pcl 1.8.1 in project directory
 set(CMAKE_MODULE_PATH ${PCL_DIR}/../cmake/Modules)
 
 # set cmake for use std c++11 and output executable folder to bin
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_STANDARD 11)
 #set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 
 ##############################################################################
@@ -60,7 +62,7 @@ message("***********************")
 message("Realsense: Legacy Library")
 message("***********************")
 
-find_library(REALSENSE_LIB realsense HINTS "${RS_DIR}/build" REQUIRED)
+find_library(REALSENSE_LIB realsense HINTS "${RS_LIB_DIR}" REQUIRED)
 if(REALSENSE_LIB)    
     message(STATUS "realsense status:")
     message(STATUS "    dir: ${REALSENSE_LIB}") 
@@ -72,7 +74,7 @@ endif()
 # HEADERS
 ##############################################################################
 include_directories(${PCL_INCLUDE_DIRS})
-include_directories(${RS_DIR}/include)
+include_directories(${RS_INCLUDE_DIR})
 include(CheckFunctionExists)
 
 # Use the compile definitions defined in PCL
@@ -82,7 +84,7 @@ add_definitions(${PCL_DEFINITIONS})
 # LIBRARIES PATH
 ##############################################################################
 link_directories(${PCL_LIBRARY_DIRS})
-link_directories(${RS_DIR})
+link_directories(${REALSENSE_LIB})
 
 ##############################################################################
 # SOURCE CODE
