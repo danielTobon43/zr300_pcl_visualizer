@@ -89,8 +89,8 @@ link_directories(${REALSENSE_LIB})
 ##############################################################################
 # SOURCE CODE
 ##############################################################################
-#set(MAIN_SOURCE "main.cpp")
-set(MAIN_SOURCE "main_multple_ports.cpp")
+set(MAIN_SOURCE "main.cpp")
+#set(MAIN_SOURCE "main_multple_ports.cpp")
 
 ##############################################################################
 # EXECUTABLES
