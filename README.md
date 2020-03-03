@@ -23,7 +23,7 @@ Follow the instructions on: https://github.com/IntelRealSense/librealsense/tree/
       Library Build Process:
       
       - mkdir build && cd build
-      - cmake ../src/
+      - cmake ../
       - make (You don't have to install it)
       
       Video4Linux backend preparation:
